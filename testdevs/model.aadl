@@ -26,9 +26,9 @@ public
 			
 			bolvariable : ldt1  => true;
 			bolvariable2 : ldt2 => false;
-			v12: Base_Types::Float => 10.0;
-			v1:  Test_Types::dt1 => 0.0;
-			v2: Test_Types::dt1 => 9.0;
+			--v12: Base_Types::Float => 10.0;
+			--v1:  Test_Types::dt1 => 0.0;
+			--v2: Test_Types::dt1 => 9.0;
 			
 			--ref_variable : Base_Types::Integer => 11;   -- does not validate Base_Types
 			--ref_var2 : Test_Types::dt1 => 13.00;   -- does not validate Base_Types
