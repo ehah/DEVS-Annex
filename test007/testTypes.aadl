@@ -1,0 +1,6 @@
+package testTypes
+public
+	data myTestType
+		
+	end myTestType;
+end testTypes;

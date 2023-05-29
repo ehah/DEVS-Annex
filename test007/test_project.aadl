@@ -1,0 +1,36 @@
+package test_project
+public
+	with Base_Types, testTypes;
+	thread abc
+		features
+		idp: in data port;
+		odp: out data port;
+		iep: in event port;
+		speed: in data port;
+		accelerate: out data port;
+		brake: out event port;
+		stop: out event port;
+		start: out data port;
+		
+	end abc;
+	thread implementation abc.impl
+		annex devs{**
+				
+			variables
+		--	floatvariable : Base_Types::Integer => 6;
+		--	negvariable : testTypes::myTestType => -7;
+			intvariable : ldt1 => 90909;
+			
+			bolvariable : ldt1  => true;
+			bolvariable2 : ldt1 => false;
+			--v12: Base_Types::Float => 10.0;
+			
+			**};
+		end  abc.impl;
+		
+		
+data ldt1
+end ldt1;
+end test_project;
+
+

@@ -1,0 +1,6 @@
+package Test_Types
+public
+	data dt1
+		
+	end dt1;
+end Test_Types;

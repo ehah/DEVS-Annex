@@ -1,0 +1,265 @@
+-- engage brake whenever speed exceeds 15 mpr.
+package Scooter
+public
+	with Sco_Types, Base_Types;
+system ElectricScooter
+		features
+			start: in event port;
+			stop1:  in event port;
+			break: out event data port Sco_Types::isBraking;
+			power: out data port Sco_Types::dutyCycle;
+		
+end ElectricScooter;
+
+
+process spdController
+	features
+		start: in event port;
+		stop1:  in event port;
+		break: out event data port Sco_Types::isBraking;
+		power: out data port Sco_Types::dutyCycle;
+		
+end spdController;
+process implementation spdController.impl
+	subcomponents
+		userInput: thread Input.impl;
+		speedContorller: thread controller.impl;
+	
+end spdController.impl;
+	
+
+thread Input
+	features
+		start: in data port Base_Types::Boolean;  
+		stop1:  in data port Base_Types::Boolean;
+		accelerate: out data port Sco_Types::acceleration;
+		brake: out event data port Sco_Types::brakeToggle;
+	properties
+		Dispatch_protocol => Periodic;
+		Period => 200 ms;  -- sampling period		
+end Input;
+
+thread implementation Input.impl
+	annex devs{**
+		
+	 variables
+		acl: Sco_Types::acceleration => 0;
+		bkc: Sco_Types::brakeToggle => false; 
+		--off: Base_Types::Integer => 0;
+	--	low: Base_Types::Integer => 30;
+	--	mid: Base_Types::Integer => 50;
+	--	hgh: Base_Types::Integer => 80;
+	--	max: Base_Types::Integer => 100;
+	--  stp: Base_Types::Integer => 0; // for event port. //just for the sake of deltext current definition 
+	--	str: Base_Types::Integer => 1;
+		str: Sco_Types::isBraking => false;
+		stp: Sco_Types::isBraking => false;
+	states
+		Idle: initial INFINITY;
+		accLow: 0.0; --modler is required is make sure that some event will terminate it
+		accMid: 10.0; --it should be equal pd, what is 10 here? sampling time ?
+		accHigh: 10.0;
+		accMax: 10.0;
+		Coasting: 10.0;
+		Braking: 10.0;
+		Set_Acc: 0.0;
+		
+	behavior
+		deltext [Idle, stop1?stp, (stp >5)]-> Idle {
+			" a= t; "
+		};
+		deltext [Idle, start?str]-> accLow { " " };
+		
+		deltint[accLow]-> accMid {
+			"acl = low; 
+			bkc = false;"
+		};
+		
+		deltint[accMid]-> accHigh {
+			"acl = mid; 
+			bkc = false;"
+		};
+		
+		deltint[accHigh]-> accMax {
+			"acl = hgh; 
+			bkc = false;"
+		};
+		
+		deltint[accMax]-> Coasting {
+			"acl = max; 
+			bkc = false;"
+		};
+		
+		deltint[Coasting]-> Braking {
+			"acl = off; 
+			bkc = true;"
+		};
+		
+		deltint[Braking]-> Idle {};
+		
+		
+		outfn []-> accelerate!acl{};
+		outfn []-> brake!bkc {};
+		
+		intest[start, 1];
+		intest[stop1, 1];
+		
+		
+			
+	**};
+	
+end Input.impl;
+
+thread Controller
+	features
+		accel: in data port Sco_Types::acceleration;
+		bat_remaining: in data port Sco_Types::batteryRemaining;
+		brk_toggle: in data port Sco_Types::brakeToggle;
+		sc_speed: in data port Sco_Types::scooterSpeed;
+		brk_out: out event data port Sco_Types::brakeControl;
+		pwr_out: out data port Sco_Types::dutyCycle;	
+	properties
+		Dispatch_protocol => Periodic;
+		Period => 200 ms;  -- sampling period
+end Controller;
+
+thread implementation Controller.impl
+	annex devs{**
+		
+		variables
+		acl: Sco_Types::acceleration => 0.0;
+		bks: Sco_Types::brakeToggle => true; --get break status
+		bkc: Sco_Types::brakeToggle => true; --set break command
+		btr: Sco_Types::batteryRemaining => 100.0;
+		spd: Sco_Types::scooterSpeed => 0.0;
+		pwr: Sco_Types::dutyCycle => 0.0;
+		--pd : Base_Types::Float => 200.0;    -- sampling period
+		pd: Sco_Types::brakeToggle => true;
+		
+		
+		states
+		Off: initial INFINITY;   -- special way of dealing modes in DEVS
+		Idling:   pd;
+		--setVars: 0.0;
+		Accelerating: pd;	
+		Declerating: pd;
+		powerSaving: INFINITY;
+		
+		
+		behavior
+		--accel: in data port Sco_Types::acceleration;
+		--bat_remaining: in data port Sco_Types::batteryRemaining;
+		--brk_toggle: in data port Sco_Types::brakeToggle;
+		--sc_speed: in data port Sco_Types::scooterSpeed;
+		
+		-- how it moves from Off to On state....write about off state to idling
+		
+		
+		--for 6.1.3 point 1
+		deltext  [Idling, brk_toggle?bks]-> Declerating  -- we can specify the condition as guard as well
+			{	
+			"if(bks.getv()== true) {
+				bkc.setv(true); 
+				pwr.setv(0.0);
+			}"
+			};
+				
+		--for 6.1.3 point 1
+		deltext  [Accelerating, brk_toggle?bks]-> Declerating 
+			{	
+			"if(bks.getv()== true) {
+				bkc.setv(true); 
+				pwr.setv(0.0);
+			}"
+			};
+		
+		--for 6.1.3 point 2 
+		
+		deltext [Idling, bat_remaining?btr, (btr < 10) ]-> powerSaving 
+			{
+				"pwr.setv(0.0);"
+			};
+		
+		--for 6.1.3 point 2
+		deltext [Accelerating, bat_remaining?btr , (btr < 10)]-> powerSaving
+			{
+				"pwr.setv(0.0);"
+			};
+		
+		--for 6.1.3 point 2
+		deltext [Declerating, bat_remaining?btr , (btr < 10) ]-> powerSaving
+			{
+				"pwr.setv(0.0);"
+			};
+			
+		--for 6.1.3 point 3, point 4a
+		deltext  [Accelerating, sc_speed?spd, (spd > 15) || (acl == 0.0) ]-> Idling {};	-- here we should move to Decelerating as spd >= 15
+		--	" bkc.setv(true); 
+		--	  pwr.setv(0.0);" 
+		--	 }; // I think, we should check speed here only, we are we checking the acl
+		
+		
+			--for 6.1.3 point 3, 4a
+		deltext  [Declerating, sc_speed?spd,  (bks == false) && {(acl > 0.0) || (spd > 15)} ]-> Idling {}; 
+		--	"if(bks.getv()==false && (spd.getv() > 15 || acl.getv() > 0.0)) {
+		--		bkc.setv(false); 
+				
+		--	}" 
+			 
+		--for 6.1.3 point 4b
+		deltext  [Idling, sc_speed?spd,  (acl > 0.0) && (spd < 15) ]-> Accelerating
+			{
+				"pwr.setv(acl);"			
+			};
+		
+		
+		deltext  [Idling, accel?acl,  (acl > 0.0) && (spd < 15) ]-> Accelerating
+			{
+				"pwr.setv(acl);"			
+			};
+		
+		--for 6.1.3 point 4b
+		deltext  [Declerating, sc_speed?spd,  (bks == false) && (acl > 0.0) && (spd < 15) ]-> Accelerating  
+			{
+				"pwr.setv(acl);"			
+			};
+		
+		
+		
+
+		
+		
+	--	deltext [Off, bat_remaining?btr]-> setVars{};
+	--deltext [Off, accel?acl]-> setVars{};
+	--	deltext [Off, bkr_toggle?bks]-> setVars{};
+	--	deltext [Off, sc_speed?spd]-> setVars{};
+			
+		--no action is taken, cruise
+		deltint [ Idling ]-> Idling {} ;
+		
+		 
+			 
+		outfn []-> pwr_out!pwr {};
+		outfn []-> brk_out!bkc {};
+		
+		
+		**};
+end Controller.impl;
+
+device Motor
+	
+end Motor;
+
+device Battery
+	
+end Battery;
+
+device brakeHandle
+	
+end brakeHandle;
+
+device speedHandle
+	
+end speedHandle;
+
+end Scooter;

@@ -1,0 +1,111 @@
+package model
+
+public
+	
+	with Test_Types, Base_Types;
+	
+	thread abc
+		features
+		idp: in data port;
+		odp: out data port;
+		iep: in event port;
+		speed: in data port;
+		accelerate: out data port;
+		brake: out event port;
+		stop: out event port;
+		start: out data port;
+		
+	end abc;
+	thread implementation abc.impl
+		annex devs{**
+				
+			variables
+			floatvariable : ldt1 => 6.0;
+			negvariable : ldt1 => -7;
+			intvariable : ldt1 => 90909;
+			
+			bolvariable : ldt1  => true;
+			bolvariable2 : ldt2 => false;
+			v12: Base_Types::Float => 10.0;
+			v1:  Test_Types::dt1 => 0.0;
+			v2: Test_Types::dt1 => 9.0;
+			
+			--ref_variable : Base_Types::Integer => 11;   -- does not validate Base_Types
+			--ref_var2 : Test_Types::dt1 => 13.00;   -- does not validate Base_Types
+			
+			str1  : ldt1 => "name";
+			str2 : ldt2 => "fname, lastname";
+			str3 : ldt2 => "middle 'name' ";
+			unspecified_value: ldt2 => "unspecified_value";
+			
+			cv1 : ldt2 => (68.0, "Valid");
+			cv2 : ldt2 => ("test", 10);
+			cv3 : ldt2 => (8, 9);
+			cv4 : ldt2 => 4;
+			spd2: ldt2 => 5;
+			spd: ldt1 => 5;
+			acl: ldt1 => 4.5;
+			bks: ldt1 => false;
+			acl1: ldt2 => 5.0;
+			acl2: ldt1 => 7;
+			
+			
+			states
+			Start : initial 0.0;
+			Chk_Mode : str1  ; 
+			state1: bolvariable;
+			End : INFINITY  ;
+			End2 : infinity ; -- both small and capital fonts are allowed for infinity
+			source_state: cv1;
+			state3: cv2;
+			Idling: 0.0;
+			state2: 0.0;
+			Accelerating: 0.0;
+			state4: 0.0;
+			Start2: 0.0;
+			
+			
+			
+			behavior
+			deltext [state1, idp?str1]-> End { "this is the action code" };
+		
+			deltext [state1, idp?cv4]-> state2 {};
+			
+			deltext [Idling, iep?cv3, (acl > 0.0) && (spd<15)]-> Accelerating 
+			{
+				"pwr.setv(acl);"
+			};
+			
+			deltext [Accelerating, speed?spd2, {(bks == false) && (acl1 > 0.0) && (spd < 15)} || (acl2 > 3)]-> Accelerating
+			{
+				"a=0;
+				 pwr.setv(acl);"
+			};
+			
+			deltext [state2, idp?spd, (cv1 > 0.0) && (cv2 < 5)]-> state4 { };
+
+			deltint [state3]-> state4 {};
+			deltint [ Start2 ]-> Chk_Mode {} ;
+			deltint [Start]-> End {};
+			
+			outfn []-> accelerate!acl{};
+			outfn [state2]-> brake!bks {};
+			outfn [source_state, (acl1 >= 70) && (bks != false)]-> odp!cv2 {};
+			
+			intest[stop, 1];
+			intest[start, (true, 100)];
+			intest[start, ("valid", 68.0)];
+			
+	
+	**};
+end abc.impl;	
+
+data ldt1
+	
+end ldt1;
+
+data ldt2
+	
+end ldt2;
+			
+end model;

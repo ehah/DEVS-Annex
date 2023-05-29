@@ -1,0 +1,8 @@
+entity abc { }
+
+entity x {
+	 abc a1;
+	 abc q2;
+
+	
+}

@@ -1,0 +1,81 @@
+package Sco_Types
+public
+	with Base_Types, Data_Model;
+
+-- Appendix A. Table 1. Select environment variables for the scooter
+
+data motorSpeed
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 2600.0;
+		Data_Model::Measurement_Unit => "rpm";
+end motorSpeed;
+
+data remainingCapacity
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 777600.0;
+		Data_Model::Measurement_Unit => "Ws";
+end remainingCapacity;
+
+-- Appendix A. Table 2. Input and output parameters of the speed sensor
+
+data scooterSpeed
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 25.0;
+		Data_Model::Measurement_Unit => "mph";
+end scooterSpeed;
+
+-- Appendix A. Table 3. Input and output parameters of the battery sensors
+
+data batteryRemaining
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 100.0;
+		Data_Model::Measurement_Unit => "percent";
+end batteryRemaining;
+
+-- Appendix A. Table 4. User-initiated input variables
+
+data acceleration
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Integer));
+		Data_Model::Integer_Range => 0 .. 100;
+		Data_Model::Measurement_Unit => "percent";
+end acceleration;
+
+data brakeToggle
+	properties
+		Data_Model::Base_Type => (classifier(Base_Types::Boolean));
+end brakeToggle;
+
+-- Appendix A. Table 5. Variables in the software controller
+-- how it is different form brakeToggle
+data brakeControl
+	properties
+		Data_Model::Base_Type => (classifier(Base_Types::Boolean));
+end brakeControl;
+
+data dutyCycle
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 100.0;
+		Data_Model::Measurement_Unit => "percent";
+end dutyCycle;
+
+-- Appendix A. Table 6. Input and output parameters of the battery
+data voltageOutput
+	properties 
+		Data_Model::Base_Type => (classifier(Base_Types::Float));
+		Data_Model::Real_Range => 0.0 .. 24.0;
+		Data_Model::Measurement_Unit => "volt";
+end voltageOutput;
+
+-- Appendix A. Table 7. Input and output parameters of the brake
+data isBraking
+	properties
+		Data_Model::Base_Type => (classifier(Base_Types::Boolean));
+end isBraking;
+
+end Sco_Types;
